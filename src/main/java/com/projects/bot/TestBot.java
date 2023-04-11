@@ -7,11 +7,9 @@ package com.projects.bot;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.methods.CopyMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
@@ -21,21 +19,35 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 public class TestBot extends TelegramLongPollingBot {
 
     private static final String[] mainTopics = new String[]{"Поступление\uD83D\uDE0B", "Общежитие\uD83C\uDFE0",
             "Стипендии\uD83D\uDCB5","Платное обучение\uD83D\uDCC3","Индивидуальные достижения\uD83C\uDFC6"};
+    private final String[] entranceTopics = new String[] {"Общие вопросы", "По ЕГЭ",
+    "По вступительным испытаниям", "БВИ", "Для льготных категорий лиц", "Для иностранных граждан"};
+    private final String generalQuestions = "1. На сколько направлений можно подать документы\n" +
+            "2. Проходной балл на … направление подготовки\n" +
+            "3. Информация о … направлении подготовки\n" +
+            "4. Даты публикации конкурсных списков\n" +
+            "5. Даты публикации приказов о зачислении\n" +
+            "6. Информация об обязательном предварительном мед. осмотре\n" +
+            "7. Количество мест на … направление подготовки\n" +
+            "8. Перечень вступительных испытаний (ЕГЭ) по … направлению подготовки\n" +
+            "9. Способы подачи документов\n" +
+            "10. Учет индивидуальных достижений\n" +
+            "11. Телефоны, почта и адрес приемной комиссии\n" +
+            "12. Как отслеживать свой статус после подачи документов";
+    private final String egeQuestions = "1. Даты начала и конца приема документов\n" +
+            "2. Перечень необходимых документов\n";
 
-   //private static Map<Long,Boolean> users;
 
-    private InlineKeyboardMarkup keyboardM1;
-    private InlineKeyboardMarkup keyboardM2;
+    ReplyKeyboardMarkup keyboardHello;
+    private InlineKeyboardMarkup keyboardEntrance;
+    private InlineKeyboardMarkup keyboardGenQuest;
 
     static Long id;
 
@@ -57,7 +69,8 @@ public class TestBot extends TelegramLongPollingBot {
         }
     }
 
-    void sendMenu(Long who, String txt, InlineKeyboardMarkup kb ){
+    void sendMenu(Long who, String txt, InlineKeyboardMarkup kb){
+
         SendMessage sm  = SendMessage.builder()
                 .chatId(who.toString())
                 .replyMarkup(kb)
@@ -72,9 +85,16 @@ public class TestBot extends TelegramLongPollingBot {
         }
     }
 
+    void assembleKeyboard(InlineKeyboardMarkup kb,String[] buttonNames ){
+        List<List<InlineKeyboardButton>> keyboardRows = new ArrayList<>();
+        for (String topic : buttonNames) {
+            keyboardRows.add(List.of(InlineKeyboardButton.builder().text(topic).callbackData(topic).build()));
+        }
+        kb.setKeyboard(keyboardRows);
+    }
+
     void sendMenu(Long who, String txt, ReplyKeyboardMarkup kb, String[] buttonNames ){
-        kb.setResizeKeyboard(true);
-        kb.setOneTimeKeyboard(false);
+        // kb.setResizeKeyboard(true);
 
         ArrayList<KeyboardRow> keyboardRows = new ArrayList<>();
         for(String topic : buttonNames){
@@ -101,6 +121,8 @@ public class TestBot extends TelegramLongPollingBot {
 
 
 
+
+
     private void buttonTap(Long id, String queryId, String data, int msgId){
         EditMessageText newTxt = EditMessageText.builder()
                 .chatId(id.toString())
@@ -109,13 +131,33 @@ public class TestBot extends TelegramLongPollingBot {
         EditMessageReplyMarkup newKb = EditMessageReplyMarkup.builder()
                 .chatId(id.toString())
                 .messageId(msgId).build();
-        if(data.equals("next")){
-            newTxt.setText("MENU 2");
-            newKb.setReplyMarkup((keyboardM2));
-        }
-        else if(data.equals("back")){
-            newTxt.setText("MENU 1");
-            newKb.setReplyMarkup((keyboardM1));
+//        if(data.equals("next")){
+//            newTxt.setText("MENU 2");
+//            newKb.setReplyMarkup((keyboardM2));
+//        }
+//        else if(data.equals("back")){
+//            newTxt.setText("MENU 1");
+//            newKb.setReplyMarkup((keyboardEntrance));
+//        }
+        switch(data){
+//            case "Назад":
+//                newTxt.setText("Поступление");
+//                newKb.setReplyMarkup((keyboardEntrance));
+            case "Общие вопросы":
+                keyboardGenQuest = new InlineKeyboardMarkup();
+                String[] questions = new String[12];
+                for (int i = 0; i < questions.length; ++i) {
+                    questions[i] = Integer.toString(i + 1);
+                }
+                assembleKeyboard(keyboardGenQuest, questions);
+                newTxt.setText(generalQuestions);
+                newKb.setReplyMarkup(keyboardGenQuest);
+            case "По ЕГЭ":
+
+            case "По вступительным испытаниям":
+
+
+
         }
 
         AnswerCallbackQuery close = AnswerCallbackQuery.builder()
@@ -156,49 +198,27 @@ public class TestBot extends TelegramLongPollingBot {
                         sendText(id,"Привет, дорогой абитуриент, я цифровой советник, разработанный " +
                                 "студентами СПБПУ специально для тебя. Я создан, чтобы давать ответы на популярные вопросы.\n Так что " +
                                 "выбери тему, которая тебя интересует -> " );
-                        ReplyKeyboardMarkup replyKeyboard = new ReplyKeyboardMarkup();
-                        sendMenu(id,"<b>Выбери тему:</b>",replyKeyboard, mainTopics);
+                        keyboardHello = new ReplyKeyboardMarkup();
+                        sendMenu(id,"<b>Выбери тему:</b>",keyboardHello, mainTopics);
                     }
-                    case "/menu" -> {
-                        var next = InlineKeyboardButton.builder()
-                                .text("Next").callbackData("next")
-                                .build();
-                        keyboardM1 = InlineKeyboardMarkup.builder()
-                                .keyboardRow(List.of(next)).build();
-                        sendMenu(id, "<b> Menu1 </b>", keyboardM1);
-                    }
+//                    case "/menu" -> {
+//                        var next = InlineKeyboardButton.builder()
+//                                .text("Next").callbackData("next")
+//                                .build();
+//                        keyboardM1 = InlineKeyboardMarkup.builder()
+//                                .keyboardRow(List.of(next)).build();
+//                        sendMenu(id, "<b> Menu1 </b>", keyboardM1);
+//                    }
                 }
                 return;
             }
             else if(msg.hasText()){
-                switch (msg.getText()){
-                    case "Поступление\uD83D\uDE0B":{
-                        var genQuestions = InlineKeyboardButton.builder()
-                                .text("<b>Общие вопросы</b>").callbackData("genQuestions")
-                                .build();
-                        var ege = InlineKeyboardButton.builder()
-                                .text("<b>По ЕГЭ</b>").callbackData("ege")
-                                .build();
-                        var back = InlineKeyboardButton.builder()
-                                .text("<b>Назад к темам</b>").callbackData("back")
-                                .build();
-
-//                        var url = InlineKeyboardButton.builder()
-//                                .text("Оффициальный сайт СПБПУ")
-//                                .url("https://www.spbstu.ru/")
-//                                .build();
-                        keyboardM1 = InlineKeyboardMarkup.builder()
-                                .keyboardRow(List.of(genQuestions))
-                                .keyboardRow(List.of(ege))
-                                .keyboardRow(List.of(back))
-                                .build();
-
-                        sendText(id,"Привет, дорогой абитуриент, я цифровой советник, разработанный " +
-                                "студентами СПБПУ специально для тебя. Я создан, чтобы давать ответы на популярные вопросы.\n Так что " +
-                                "выбери тему, которая тебя интересует -> " );
-                        sendMenu(id,"<b> Интересующая тебя тема </b>",keyboardM1);
+                switch (msg.getText()) {
+                    case "Поступление\uD83D\uDE0B" -> {
+                        keyboardEntrance = new InlineKeyboardMarkup();
+                        assembleKeyboard(keyboardEntrance,entranceTopics);
+                        sendMenu(id, "<b> Интересующая тебя тема </b>", keyboardEntrance);
                     }
-
                 }
             }
 
