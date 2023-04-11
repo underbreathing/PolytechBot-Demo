@@ -25,8 +25,10 @@ import java.util.List;
 
 public class TestBot extends TelegramLongPollingBot {
 
+    private static final String[][] links = new String[][]{{"Оффициыльный сайт ИПМЭиТ","https://imet.spbstu.ru/"},{"Канал в телеграмме","https://t.me/imetspbstu"}
+            ,{"Группа вконтакте","https://vk.com/imet.spbstu"}};
     private static final String[] mainTopics = new String[]{"Поступление\uD83D\uDE0B", "Общежитие\uD83C\uDFE0",
-            "Стипендии\uD83D\uDCB5","Платное обучение\uD83D\uDCC3","Индивидуальные достижения\uD83C\uDFC6"};
+            "Стипендии\uD83D\uDCB5","Платное обучение\uD83D\uDCC3","Индивидуальные достижения\uD83C\uDFC6","Полезные ссылки\uD83D\uDD17"};
     private final String[] entranceTopics = new String[] {"Общие вопросы", "По ЕГЭ",
     "По вступительным испытаниям", "БВИ", "Для льготных категорий лиц", "Для иностранных граждан"};
     private final String generalQuestions = "1. На сколько направлений можно подать документы\n" +
@@ -45,9 +47,12 @@ public class TestBot extends TelegramLongPollingBot {
             "2. Перечень необходимых документов\n";
 
 
-    ReplyKeyboardMarkup keyboardHello;
+    private ReplyKeyboardMarkup keyboardHello;
     private InlineKeyboardMarkup keyboardEntrance;
     private InlineKeyboardMarkup keyboardGenQuest;
+    private InlineKeyboardMarkup prevKeyboard;
+    private InlineKeyboardMarkup linksKeyboard;
+    private String prevHandle;
 
     static Long id;
 
@@ -140,23 +145,27 @@ public class TestBot extends TelegramLongPollingBot {
 //            newKb.setReplyMarkup((keyboardEntrance));
 //        }
         switch(data){
-//            case "Назад":
-//                newTxt.setText("Поступление");
-//                newKb.setReplyMarkup((keyboardEntrance));
+            case "Назад":
+                newTxt.setText(prevHandle);
+                newKb.setReplyMarkup(prevKeyboard);
+                break;
             case "Общие вопросы":
+                prevKeyboard = keyboardEntrance;
+                prevHandle = "Общие вопросы";
+
                 keyboardGenQuest = new InlineKeyboardMarkup();
-                String[] questions = new String[12];
-                for (int i = 0; i < questions.length; ++i) {
-                    questions[i] = Integer.toString(i + 1);
+                String[] questions = new String[13];
+                questions[0] = "Назад";
+                for (int i = 1; i < questions.length; ++i) {
+                    questions[i] = Integer.toString(i);
                 }
                 assembleKeyboard(keyboardGenQuest, questions);
                 newTxt.setText(generalQuestions);
-                newKb.setReplyMarkup(keyboardGenQuest);
+                newKb.setReplyMarkup((keyboardGenQuest));
+                break;
             case "По ЕГЭ":
-
+                break;
             case "По вступительным испытаниям":
-
-
 
         }
 
@@ -166,7 +175,6 @@ public class TestBot extends TelegramLongPollingBot {
             execute(close);
             execute(newTxt);
             execute(newKb);
-
         }
         catch(TelegramApiException e){
             throw new RuntimeException(e);
@@ -218,6 +226,15 @@ public class TestBot extends TelegramLongPollingBot {
                         keyboardEntrance = new InlineKeyboardMarkup();
                         assembleKeyboard(keyboardEntrance,entranceTopics);
                         sendMenu(id, "<b> Интересующая тебя тема </b>", keyboardEntrance);
+                    }
+                    case "Полезные ссылки\uD83D\uDD17" ->{
+                        linksKeyboard = new InlineKeyboardMarkup();
+                        List<List<InlineKeyboardButton>> keyboardRows = new ArrayList<>();
+                        for(int i = 0; i < links.length; ++i){
+                                keyboardRows.add(List.of(InlineKeyboardButton.builder().text(links[i][0]).url(links[i][1]).build()));
+                        }
+                        linksKeyboard.setKeyboard(keyboardRows);
+                        sendMenu(id,"Полезные ссылки:",linksKeyboard);
                     }
                 }
             }
